@@ -1,0 +1,36 @@
+import { load, save } from "../utils/storage";
+
+const API = import.meta.env.VITE_API_URL;
+
+export async function getApiKey(accessToken: string) {
+  const savedKey = load("apiKey");
+  if (savedKey) {
+    return savedKey;
+  }
+
+  const res = await fetch(`${API}/auth/create-api-key`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  const data = await res.json();
+  save("apiKey", data.data.key);
+  return data.data.key;
+}
+
+export async function authHeaders() {
+  const user = load("user");
+  if (!user) {
+    throw new Error("User not logged in");
+  }
+
+  const apiKey = await getApiKey(user.accessToken);
+
+  return {
+    Authorization: `Bearer ${user.accessToken}`,
+    "X-Noroff-API-Key": apiKey,
+    "Content-Type": "application/json",
+  };
+}

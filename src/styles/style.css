@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Roboto:ital,wght@0,300;1,300&display=swap');
+@import "tailwindcss";
+
+@theme {
+    /*LIGHT Colors*/
+    --color-primary: oklch(58.5% 0.233 277.117);
+    --color-secondary: oklch(67.3% 0.182 276.935);
+    --color-tertiary: oklch(78.5% 0.115 274.713);
+    --color-bg: oklch(98.4% 0.003 247.858);
+    --color-surface: oklch(96.8% 0.007 247.896);
+    --color-accent: oklch(92.9% 0.013 255.508);
+    --color-text: oklch(12.9% 0.042 264.695);
+
+    /*Typography*/
+    --font-display: "abril fatface";
+    --font-body: "roboto";
+    /**/
+}
