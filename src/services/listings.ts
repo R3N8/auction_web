@@ -16,12 +16,20 @@ export async function fetchListings(
 
     // Search query
     if (opts.q) {
+      const params = new URLSearchParams();
+      params.set("q", opts.q);
+      params.set("_seller", "true");
+      params.set("_bids", "true");
+
       url = `${API}/auction/listings/search?q=${encodeURIComponent(opts.q)}`;
     } else {
       const params = new URLSearchParams();
       if (opts.page) params.set("page", String(opts.page));
       if (opts.tag) params.set("_tag", opts.tag); // correct per docs
       if (opts.active !== undefined) params.set("_active", String(opts.active));
+
+      params.set("_seller", "true");
+      params.set("_bids", "true");
 
       url = `${API}/auction/listings?${params.toString()}`;
     }

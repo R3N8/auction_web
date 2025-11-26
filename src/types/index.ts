@@ -32,6 +32,10 @@ export class ApiError extends Error {
 }
 /*AUTH - END*/
 
+/* ALERTS */
+export type AlertType = "success" | "error" | "warning" | "info";
+/* ALERTS - END */
+
 /*LISTING*/
 export interface ListingQuery {
   page?: number;
@@ -46,6 +50,7 @@ export interface Listing {
   id: string;
   title: string;
   description: string;
+  startingPrice?: number;
   tags?: string[];
   media?: Media[];
   createdAt: string;
@@ -88,3 +93,11 @@ export interface Bidder {
   banner?: Media;
 }
 /*LISTING - END*/
+
+/* PROFILE */
+export interface Profile {
+  id: string;
+  name: string;
+  bio?: string;
+}
+/* PROFILE - END */

@@ -31,10 +31,8 @@ export async function router() {
   // Append result based on its type
   if (typeof result === "string") {
     app.innerHTML = result;
-    // Added type check for HTMLElement
   } else if (result instanceof HTMLElement) {
     app.appendChild(result);
-    // Fallback for unexpected types
   } else {
     throw new Error("Invalid page result");
   }

@@ -1,14 +1,21 @@
 import "./styles/style.css";
 import { router } from "./router";
 import Navbar, { attachNavbarEventListeners } from "./components/Navbar";
+import Footer from "./components/Footer";
+import { flash } from "./utils/flash";
+import { showAlert } from "./utils/alerts";
 
-//localStorage.removeItem("user"); // Clear invalid user data once at startup
-
-function App() {
-  // Render Navbar
+// Initialize the app
+async function App() {
+  // Render Navbar container
   const navbarContainer = document.createElement("div");
   navbarContainer.id = "navbar";
   document.body.prepend(navbarContainer);
+
+  // Render footer container
+  const footerContainer = document.createElement("div");
+  footerContainer.id = "footer-container";
+  document.body.appendChild(footerContainer);
 
   // Create main app container
   let app = document.getElementById("app");
@@ -19,37 +26,61 @@ function App() {
   }
 
   // Initial render
-  renderNavbar();
-  router();
+  await renderApp();
 }
 
-// Function to render the Navbar
+// Render Navbar
 export function renderNavbar() {
   const navbarContainer = document.getElementById("navbar");
   if (!navbarContainer) return;
 
-  // Remove/hide Navbar on auth routes
   const currentRoute = window.location.hash;
   const authRoutes = ["#/login", "#/register"];
 
   if (authRoutes.includes(currentRoute)) {
-    navbarContainer.innerHTML = ""; // Clear Navbar on auth routes
+    navbarContainer.innerHTML = "";
     navbarContainer.style.display = "none";
     return;
   }
 
   navbarContainer.style.display = "block";
   navbarContainer.innerHTML = Navbar();
-  attachNavbarEventListeners(); // Attach logout event listener
+  attachNavbarEventListeners();
 }
 
-// Handle hash changes for routing
-window.addEventListener("hashchange", () => {
-  router();
+// Render footer
+function renderFooter() {
+  const footerContainer = document.getElementById("footer-container");
+  if (!footerContainer) return;
+
+  footerContainer.innerHTML = Footer();
+}
+
+// Render router and handle flash messages
+async function renderApp() {
+  await router();
+
+  const app = document.getElementById("app");
+  if (app && flash.message && flash.type) {
+    const alertContainer =
+      app.querySelector<HTMLDivElement>("#alert-container");
+    if (alertContainer) {
+      showAlert(alertContainer, flash.type, flash.message);
+      flash.message = null;
+      flash.type = null;
+    }
+  }
+
   renderNavbar();
+  renderFooter();
+}
+
+// Hashchange listener
+window.addEventListener("hashchange", async () => {
+  await renderApp();
 });
 
-// Initialize the app on window load
-window.addEventListener("load", () => {
-  App();
+// Initialize app on window load
+window.addEventListener("load", async () => {
+  await App();
 });

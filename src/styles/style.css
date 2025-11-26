@@ -1,18 +1,106 @@
-@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Roboto:ital,wght@0,300;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Abel&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
-    /*LIGHT Colors*/
-    --color-primary: oklch(58.5% 0.233 277.117);
-    --color-secondary: oklch(67.3% 0.182 276.935);
-    --color-tertiary: oklch(78.5% 0.115 274.713);
-    --color-bg: oklch(98.4% 0.003 247.858);
-    --color-surface: oklch(96.8% 0.007 247.896);
-    --color-accent: oklch(92.9% 0.013 255.508);
-    --color-text: oklch(12.9% 0.042 264.695);
+    /*Colors*/
+    --color-primary: oklch(66.7% 0.295 322.15);
+    --color-secondary: oklch(59.1% 0.293 322.896);
+    --color-tertiary: oklch(74% 0.238 322.16);
+    --color-bg: oklch(12.9% 0.042 264.695);
+    --color-surface: oklch(27.9% 0.041 260.031);
+    --color-accent: oklch(44.6% 0.043 257.281);
+    --color-text: oklch(98.4% 0.003 247.858);
 
     /*Typography*/
-    --font-display: "abril fatface";
-    --font-body: "roboto";
+    --font-display: "Montserrat", serif;
+    --font-body: "Abel", serif;
     /**/
+}
+
+@layer base {
+  h1 {
+    @apply font-display text-4xl/10 font-bold tracking-widest text-text capitalize;
+  }
+
+  h2 {
+    @apply font-display text-3xl/9 font-semibold tracking-tight text-text capitalize;
+  }
+
+  h3 {
+    @apply font-display text-2xl/8 font-semibold tracking-normal text-text capitalize;
+  }
+
+  h4 {
+    @apply font-display text-base/7 font-normal tracking-wider capitalize;
+  }
+
+  p {
+    @apply font-body text-base/7 font-normal tracking-wider text-text;
+  }
+}
+
+@layer utilities {
+    .center-page {
+    @apply flex items-center justify-center col-span-full min-h-[50dvh];
+  }
+
+    .text-small {
+        @apply font-body text-sm/6 tracking-normal text-text;
+    }
+
+    .text-muted {
+        @apply text-text/40;
+    }
+
+    .alert {
+        @apply col-span-full px-4 py-5 rounded-xl font-body border flex flex-col items-center text-center gap-3;
+    }
+
+    .alert-error{
+        @apply flex flex-col items-center gap-2 bg-red-100 border-none px-4 py-3 rounded;
+    }
+
+    .alert-error i{
+        @apply text-4xl text-red-600 flex items-center justify-center;
+    }
+
+    .alert-error p{
+        @apply text-red-600 font-body;
+    }
+
+    .alert-success {
+        @apply flex flex-col items-center gap-2 bg-green-100 border-none px-4 py-3 rounded;
+    }
+
+    .alert-success i{
+        @apply text-4xl text-green-600 flex items-center justify-center;
+    }
+
+    .alert-success p{
+        @apply text-green-600 font-body;
+    }
+
+    .alert-warning {
+        @apply flex flex-col items-center gap-2 bg-yellow-100 border-none px-4 py-3 rounded;
+    }
+
+    .alert-warning i{
+        @apply text-4xl text-yellow-600 flex items-center justify-center;
+    }
+
+    .alert-warning p{
+        @apply text-yellow-600 font-body;
+    }
+
+    .alert-info {
+        @apply flex flex-col items-center gap-2 bg-fuchsia-200 border-none px-4 py-3 rounded;
+    }
+
+    .alert-info i{
+        @apply text-4xl text-fuchsia-600 flex items-center justify-center;
+    }
+
+    .alert-info p{
+        @apply text-fuchsia-600 font-body;
+    }
 }
