@@ -1,6 +1,5 @@
+import { API } from "../api/constants";
 import { load, save } from "../utils/storage";
-
-const API = import.meta.env.VITE_API_URL;
 
 export async function getApiKey(accessToken: string) {
   const savedKey = load("apiKey");

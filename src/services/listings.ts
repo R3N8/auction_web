@@ -1,6 +1,5 @@
+import { API } from "../api/constants";
 import { authHeaders } from "../services/apiKey";
-
-const API = import.meta.env.VITE_API_URL;
 
 // Fetch listings with optional filters: page, tag, active status, and search query
 export async function fetchListings(

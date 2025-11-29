@@ -95,9 +95,28 @@ export interface Bidder {
 /*LISTING - END*/
 
 /* PROFILE */
+export type ProfileUpdate = Partial<Pick<Profile, "bio" | "avatar" | "banner">>;
+
 export interface Profile {
   id: string;
   name: string;
   bio?: string;
+  avatar?: AvatarBanner;
+  banner?: AvatarBanner;
+  credits: number;
+  listings?: Listing[];
+  wins?: string[];
+  _count: ProfileCount;
+  isFollowed?: boolean;
+}
+
+interface AvatarBanner {
+  url: string;
+  alt: string;
+}
+
+interface ProfileCount {
+  listings: number;
+  wins: number;
 }
 /* PROFILE - END */

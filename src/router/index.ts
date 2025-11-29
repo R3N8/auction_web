@@ -1,8 +1,8 @@
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import Profile from "../pages/Profile";
 
-// All pages can return string or Promise<string>
 const routes: Record<
   string,
   () => string | HTMLElement | Promise<string | HTMLElement>
@@ -10,25 +10,29 @@ const routes: Record<
   "#/": Home,
   "#/login": Login,
   "#/register": Register,
+  "#/profile": Profile, // always your own profile
 };
 
 function normalizePath(hash: string): string {
   if (!hash || hash === "#") return "#/";
-  return hash.split("?")[0];
+  return hash.split("?")[0].replace(/\/$/, "");
 }
 
 export async function router() {
-  // Get the current path from the URL hash
   const rawHash = window.location.hash;
   const path = normalizePath(rawHash);
 
-  const page = routes[path] || Home;
+  const routeKey =
+    Object.keys(routes)
+      .sort((a, b) => b.length - a.length)
+      .find((route) => path.startsWith(route)) || "#/";
+
+  const page = routes[routeKey];
   const result = await page();
 
   const app = document.getElementById("app")!;
   app.innerHTML = "";
 
-  // Append result based on its type
   if (typeof result === "string") {
     app.innerHTML = result;
   } else if (result instanceof HTMLElement) {
@@ -38,6 +42,6 @@ export async function router() {
   }
 }
 
-// Listen to hash changes and load the appropriate page
+// Hash listeners
 window.addEventListener("hashchange", router);
 window.addEventListener("load", router);
