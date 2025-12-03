@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { getCurrentUser } from "../services/auth";
+import { startCountdown } from "../utils/countdown";
 import type { Listing } from "../types";
 
 export function createListingCard(item: Listing) {
@@ -54,46 +55,42 @@ export function createListingCard(item: Listing) {
         
         <!-- CTAs -->
         <div class="flex justify-between items-center mt-auto">
-            <a href="#/listings/${item.id}" class="btn-detail rounded-md bg-accent py-2 px-4 hover:bg-accent/50">
+            <a href="#/listing/${item.id}" class="btn-detail rounded-md bg-accent py-2 px-4 hover:bg-accent/50">
                 <p class="capitalize">view item</p>
             </a>
-            <button type="button" class="flex items-center gap-2 btn-bid rounded-md bg-primary py-2 px-4 cursor-pointer hover:bg-secondary ${!user ? "opacity-50 cursor-not-allowed" : ""}" data-id="${item.id}" ${!user ? "disabled" : ""}>
+            <button id="place-bid-btn" type="button" class="flex items-center gap-2 btn-bid rounded-md bg-primary py-2 px-4 cursor-pointer hover:bg-secondary ${!user ? "opacity-50 cursor-not-allowed" : ""}" data-id="${item.id}" ${!user ? "disabled" : ""}>
                 <i class="fa-solid fa-gavel text-small text-text"></i>
                 <p class="capitalize">place bid</p>
             </button>
         </div>
     `;
 
+  // countdown
   const countdownEl = card.querySelector<HTMLDivElement>(
     `#countdown-${item.id}`,
   )!;
-
-  function updateCountdown() {
-    const now = DateTime.now();
+  if (countdownEl) {
     const end = DateTime.fromISO(item.endsAt);
-    const diff = end
-      .diff(now, ["days", "hours", "minutes", "seconds"])
-      .toObject();
-
-    if (diff.seconds! <= 0) {
-      countdownEl.textContent = "Auction ended";
-      countdownEl.style.color = "gray";
-      return;
-    }
-
-    const hoursLeft = diff.days! * 24 + diff.hours!;
-    countdownEl.style.color =
-      hoursLeft > 72
-        ? "green"
-        : hoursLeft > 48
-          ? "yellow"
-          : hoursLeft > 0
-            ? "red"
-            : "gray";
-    countdownEl.textContent = `${diff.days}d ${diff.hours}h ${diff.minutes}m ${Math.floor(diff.seconds!)}s`;
-
-    requestAnimationFrame(updateCountdown);
+    startCountdown(countdownEl, end);
   }
-  updateCountdown();
+
+  // view history btn
+  const viewHistoryBtn =
+    card.querySelector<HTMLButtonElement>(".btn-view-history");
+  if (viewHistoryBtn) {
+    viewHistoryBtn.addEventListener("click", () => {
+      // Navigate to the correct listing route
+      window.location.hash = `#/listing/${item.id}`;
+
+      // Wait a short moment for the page to render, then scroll
+      setTimeout(() => {
+        const bidHistory = document.getElementById("bid-history");
+        if (bidHistory) {
+          bidHistory.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100); // 100ms delay
+    });
+  }
+
   return card;
 }
