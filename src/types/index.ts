@@ -36,7 +36,22 @@ export class ApiError extends Error {
 export type AlertType = "success" | "error" | "warning" | "info";
 /* ALERTS - END */
 
+/*PAGINATION */
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+/*PAGINATION - END*/
+
 /*LISTING*/
+export interface FetchListingsParams {
+  _seller?: boolean;
+  _bids?: boolean;
+  q?: string;
+  page?: number;
+}
+
 export interface ListingQuery {
   page?: number;
   tag?: string;

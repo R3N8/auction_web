@@ -1,15 +1,14 @@
 import type { LoginData, RegisterData } from "../types";
+import { API } from "../api/constants";
+import { getApiKey } from "./apiKey";
 import { save, load } from "../utils/storage";
-
-const API = import.meta.env.VITE_API_URL;
 
 // Login function - sends user credentials to the backend and saves the user data on success
 export async function login(data: LoginData) {
-  const { email, password } = data;
   const res = await fetch(`${API}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(data),
   });
 
   const json = await res.json();
@@ -18,6 +17,9 @@ export async function login(data: LoginData) {
   }
 
   save("user", json.data);
+
+  const apiKey = await getApiKey(json.data.accessToken);
+  save("apiKey", apiKey);
   return json.data;
 }
 

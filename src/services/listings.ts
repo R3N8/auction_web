@@ -1,47 +1,22 @@
 import { API } from "../api/constants";
 import { authHeaders } from "../services/apiKey";
+import { load } from "../utils/storage";
+import type { Listing, FetchListingsParams } from "../types";
 
 // Fetch listings with optional filters: page, tag, active status, and search query
 export async function fetchListings(
-  opts: {
-    page?: number;
-    tag?: string;
-    active?: boolean;
-    q?: string;
-  } = {},
-) {
-  try {
-    let url = "";
+  params?: FetchListingsParams,
+): Promise<Listing[]> {
+  const queryParams = new URLSearchParams();
+  if (params?._seller) queryParams.append("_seller", "true");
+  if (params?._bids) queryParams.append("_bids", "true");
+  if (params?.q) queryParams.append("q", params.q);
+  if (params?.page) queryParams.append("page", params.page.toString());
 
-    // Search query
-    if (opts.q) {
-      const params = new URLSearchParams();
-      params.set("q", opts.q);
-      params.set("_seller", "true");
-      params.set("_bids", "true");
-
-      url = `${API}/auction/listings/search?q=${encodeURIComponent(opts.q)}`;
-    } else {
-      const params = new URLSearchParams();
-      if (opts.page) params.set("page", String(opts.page));
-      if (opts.tag) params.set("_tag", opts.tag); // correct per docs
-      if (opts.active !== undefined) params.set("_active", String(opts.active));
-
-      params.set("_seller", "true");
-      params.set("_bids", "true");
-
-      url = `${API}/auction/listings?${params.toString()}`;
-    }
-
-    const res = await fetch(url);
-    if (!res.ok) return []; // 404 or other errors
-
-    const data = await res.json();
-    return data.data || [];
-  } catch (error) {
-    console.error("Error fetching listings:", error);
-    return [];
-  }
+  const res = await fetch(`${API}/auction/listings?${queryParams.toString()}`);
+  if (!res.ok) throw new Error(`Failed to fetch listings: ${res.status}`);
+  const data = await res.json();
+  return data.data;
 }
 
 // Fetch a single listing by ID, with optional inclusion of seller and bids
@@ -69,19 +44,30 @@ export async function createListing(payload: {
   media?: { url: string; alt: string }[];
   endsAt: string;
 }) {
-  const headers = await authHeaders();
+  const user = load("user");
+  if (!user?.accessToken) throw new Error("User not logged in");
+
+  const headers = {
+    Authorization: `Bearer ${user.accessToken}`,
+    "Content-Type": "application/json",
+  };
+
+  console.log("Creating listing with headers:", headers);
+  console.log("Payload:", payload);
+
   const res = await fetch(`${API}/auction/listings`, {
     method: "POST",
     headers,
     body: JSON.stringify(payload),
   });
 
-  if (res.status === 400) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || "Validation error");
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Failed to create listing");
   }
 
   const data = await res.json();
+  console.log("Listing created:", data.data);
   return data.data;
 }
 

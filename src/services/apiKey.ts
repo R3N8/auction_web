@@ -21,11 +21,10 @@ export async function getApiKey(accessToken: string) {
 
 export async function authHeaders() {
   const user = load("user");
-  if (!user) {
-    throw new Error("User not logged in");
+  const apiKey = load("apiKey");
+  if (!user?.accessToken || !apiKey) {
+    throw new Error("User not logged in or missing API key");
   }
-
-  const apiKey = await getApiKey(user.accessToken);
 
   return {
     Authorization: `Bearer ${user.accessToken}`,

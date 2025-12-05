@@ -44,7 +44,7 @@ export function createListingCard(item: Listing) {
         <!-- Item Bids -->
         <div class="flex flex-col">
             <div class="flex items-center justify-between capitalize">
-                <p class="text-muted cursor-default">highest: ${highestBid !== null ? highestBid : "no bids"}</p>
+                <p class="text-muted cursor-default">highest: ${highestBid !== null ? highestBid : "no bids"}$</p>
                 <button type="button" class="btn-view-history flex flex-end items-center gap-1 cursor-pointer" data-id="${item.id}">
                     <i class="fa-solid fa-clock-rotate-left text-small text-text"></i>
                     <p class="capitalize hover:underline hover:text-text">history</p>

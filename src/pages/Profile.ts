@@ -1,9 +1,21 @@
-import { getProfile, updateProfile } from "../services/profiles";
+import {
+  getProfile,
+  updateProfile,
+  getProfileListings,
+  getProfileBids,
+  getProfileWins,
+} from "../services/profiles";
+import {
+  getListingById,
+  updateListing,
+  deleteListing,
+} from "../services/listings";
+import { createListingModal } from "../components/ListingModal";
 import { getCredits } from "../utils/credits";
-import { fetchListings } from "../services/listings";
 import { showAlert } from "../utils/alerts";
 import type { Listing, Profile } from "../types";
 import { renderNavbar } from "../main";
+import { getHighestBid } from "../utils/getHighestBid";
 
 export default async function Profile(): Promise<HTMLElement> {
   const element = document.createElement("div");
@@ -25,16 +37,11 @@ export default async function Profile(): Promise<HTMLElement> {
   try {
     userProfile = await getProfile(user.name);
 
-    const allListings: Listing[] = await fetchListings();
-    userListings = allListings.filter(
-      (l: Listing) => l.seller?.name === user.name,
-    );
-
-    userBids = allListings.filter((l: Listing) =>
-      l.bids?.some((bid) => bid.bidder?.name === user.name),
-    );
-
-    userWins = allListings.filter((l) => userProfile.wins?.includes(l.id));
+    userListings = await getProfileListings(user.name);
+    userBids = (await getProfileBids(user.name))
+      .map((bid) => bid.listing)
+      .filter(Boolean) as Listing[];
+    userWins = await getProfileWins(user.name);
   } catch (err) {
     console.error(err);
     element.innerHTML =
@@ -59,44 +66,45 @@ export default async function Profile(): Promise<HTMLElement> {
   const renderTabContent = (tab: string): string => {
     switch (tab) {
       case "Listings":
-        if (userListings.length === 0) {
+        if (userListings.length === 0)
           return "<p class='text-text/70 text-center py-8'>No active listings yet.</p>";
-        }
         return `
           <div class="grid gap-4">
             ${userListings
-              .map(
-                (listing) => `
-              <div class="border rounded-lg p-4">
-                <div class="flex gap-4">
-                  ${
-                    listing.media?.[0]
-                      ? `
-                    <img src="${listing.media[0].url}" alt="${listing.title}" 
-                         class="w-24 h-24 object-cover rounded" />
-                  `
-                      : ""
-                  }
+              .map((listing) => {
+                const highestBid = getHighestBid(listing);
+
+                return `
+              <div class="bg-accent rounded-lg p-4 relative">
+                <div class="absolute top-1 right-1 flex justify-end gap-2">
+                  <button title="edit" data-action="edit" data-id="${listing.id}" class="p-2 rounded text-text text-lg cursor-pointer hover:text-primary">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+
+                  <button title="delete" data-action="delete" data-id="${listing.id}" class="p-2 rounded text-text text-lg cursor-pointer hover:text-primary">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+
+                <div class="flex items-end justify-baseline gap-4">
+                  ${listing.media?.[0] ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />` : ""}
                   <div class="flex-1">
-                    <h3>${listing.title}</h3>
-                    <p class="text-text/70 text-sm mt-1">${listing.description?.substring(0, 100) || ""}...</p>
+                    <p class="text-xl font-semibold capitalize">${listing.title}</p>
                     <div class="flex justify-between items-center mt-2">
-                      <span class="text-priary font-bold">${listing.bids?.length || 0} bids</span>
+                      <span class="text-text">${highestBid !== null ? `${highestBid} $` : "No bids"}</span>
                       <span class="text-sm text-text/70">Ends: ${new Date(listing.endsAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
               </div>
-            `,
-              )
+            `;
+              })
               .join("")}
           </div>
         `;
-
       case "Bids":
-        if (userBids.length === 0) {
+        if (userBids.length === 0)
           return "<p class='text-text/70 text-center py-8'>No active bids yet.</p>";
-        }
         return `
           <div class="grid gap-4">
             ${userBids
@@ -108,18 +116,10 @@ export default async function Profile(): Promise<HTMLElement> {
                   (a, b) => b.amount - a.amount,
                 )[0];
                 const isWinning = userBid?.amount === highestBid?.amount;
-
                 return `
                 <div class="border rounded-lg p-4 ${isWinning ? "border-green-500" : ""}">
                   <div class="flex gap-4">
-                    ${
-                      listing.media?.[0]
-                        ? `
-                      <img src="${listing.media[0].url}" alt="${listing.title}" 
-                           class="w-24 h-24 object-cover rounded" />
-                    `
-                        : ""
-                    }
+                    ${listing.media?.[0] ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />` : ""}
                     <div class="flex-1">
                       <div class="flex justify-between items-start">
                         <h3>${listing.title}</h3>
@@ -136,117 +136,128 @@ export default async function Profile(): Promise<HTMLElement> {
               .join("")}
           </div>
         `;
-
       case "Wins":
-        if (userWins.length === 0) {
+        if (userWins.length === 0)
           return "<p class='text-text/70 text-center py-8'>No wins yet. Keep bidding!</p>";
-        }
         return `
           <div class="grid gap-4">
             ${userWins
               .map(
                 (listing) => `
-              <div class="border border-green-500 rounded-lg p-4">
+              <div class="bg-accent rounded-lg p-4">
                 <div class="flex gap-4">
-                  ${
-                    listing.media?.[0]
-                      ? `
-                    <img src="${listing.media[0].url}" alt="${listing.title}" 
-                         class="w-24 h-24 object-cover rounded" />
-                  `
-                      : ""
-                  }
-                  <div class="flex-1">
-                    <div class="flex justify-between items-start">
-                      <h3">${listing.title}</h3>
-                      <span class="bg-green-500 text-text text-xs px-2 py-1 rounded">Won</span>
-                    </div>
-                    <p class="text-text/70 text-sm mt-1">${listing.description?.substring(0, 100) || ""}...</p>
-                    <p class="text-primary font-bold mt-2">
-                      Won for: ${listing.bids?.sort((a, b) => b.amount - a.amount)[0]?.amount || 0} credits
-                    </p>
-                  </div>
-                </div>
+                  ${listing.media?.[0] ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />` : ""}
+                  <p class="text-xl font-semibold mt-2">
+                    Won for: ${listing.bids?.sort((a, b) => b.amount - a.amount)[0]?.amount || 0} $
+                  </p>
               </div>
             `,
               )
               .join("")}
           </div>
         `;
-
       default:
         return "<p class='text-text/70'>Select a tab to view content.</p>";
     }
   };
 
+  // ... The rest of your modal and edit form code stays exactly the same
+
   element.innerHTML = `
     <div id="alert-container"></div>
-    <!-- Banner --> 
-    <div class="h-60"> 
+    <div class="h-60">
         <img src="${userProfile.banner?.url}" alt="Banner" class="w-full h-full object-cover" />
-    s</div>
+    </div>
     <div class="-mt-20">
-        <!-- Centered container -->
         <div class="w-full px-4 flex flex-col gap-8 py-8">
-
-        <div class="shrink-0 md:w-80 mx-auto">   <!-- <— add mx-auto to keep it centered -->
+          <div class="shrink-0 md:w-80 mx-auto">
             <div class="relative w-32 h-32 mx-auto">
-            <img src="${userProfile.avatar?.url || user.avatar || "no image"}" alt="Avatar" class="border-4 border-bg rounded-full w-full h-full object-cover" />
-            <button id="edit-profile-btn" class="absolute items-center h-8 w-8 bottom-0 right-0 bg-primary text-text text-sm rounded-full hover:bg-secondary transition">
+              <img src="${userProfile.avatar?.url || user.avatar || "no image"}" alt="Avatar" class="border-4 border-bg rounded-full w-full h-full object-cover" />
+              <button id="edit-profile-btn" class="absolute items-center h-8 w-8 bottom-0 right-0 bg-primary text-text text-sm cursor-pointer rounded-full hover:bg-secondary transition">
                 <i class="fa-solid fa-pen"></i>
-            </button>
-        </div>
-
-        <h2 class="text-center">${userProfile.name}</h2>
-
-        ${
-          userProfile.bio
-            ? `
-        <p class="mt-4 text-center text-text/70 italic">"${userProfile.bio}"</p>
-        `
-            : ""
-        }
-
-        <p class="mt-4 font-bold text-center text-primary">${getExperienceLevel(userProfile)}</p>
-
-        <div class="flex justify-around mt-6 text-center cursor-default">
-            <div>
+              </button>
+            </div>
+            <h2 class="text-center">${userProfile.name}</h2>
+            ${userProfile.bio ? `<p class="mt-4 text-center text-text/70 italic">"${userProfile.bio}"</p>` : ""}
+            <p class="mt-4 font-bold text-center text-primary">${getExperienceLevel(userProfile)}</p>
+            <div class="flex justify-around mt-6 text-center cursor-default">
+              <div>
                 <p class="font-bold text-2xl">${userListings.length}</p>
                 <p class="text-text/70 text-sm">Listings</p>
-            </div>
-            <div>
+              </div>
+              <div>
                 <p class="font-bold text-2xl">${winAmount}</p>
                 <p class="text-text/70 text-sm">Wins</p>
-            </div>
-            <div>
+              </div>
+              <div>
                 <p class="font-bold text-2xl">${credits}</p>
                 <p class="text-text/70 text-sm capitalize">credits</p>
+              </div>
             </div>
-        </div>
-    </div>
-
-    <div class="w-full bg-surface rounded-sm p-6 flex flex-col">   <!-- <— full width now -->
-        <div class="border-b border-accent flex gap-4 mb-6 overflow-x-auto">
-            ${tabs
-              .map(
-                (tab) => `
-                <button data-tab="${tab}" class="tab-button pb-2 px-4 whitespace-nowrap transition cursor-pointer ${
-                  tab === activeTab
-                    ? "border-b-2 border-primary text-primary font-semibold"
-                    : "text-accent hover:text-primary"
-                }"> ${tab}
-                </button>
-            `,
-              )
-              .join("")}
-        </div>
-
-        <div id="tab-content">
-            ${renderTabContent(activeTab)}
+          </div>
+          <div class="w-full bg-surface rounded-sm p-6 flex flex-col">
+            <div class="border-b border-accent flex gap-4 mb-6 overflow-x-auto">
+              ${tabs
+                .map(
+                  (tab) => `
+                <button data-tab="${tab}" class="tab-button pb-2 px-4 whitespace-nowrap transition cursor-pointer ${tab === activeTab ? "border-b-2 border-primary text-primary font-semibold" : "text-accent hover:text-primary"}"> ${tab}</button>
+              `,
+                )
+                .join("")}
+            </div>
+            <div id="tab-content">${renderTabContent(activeTab)}</div>
+          </div>
         </div>
     </div>
   `;
+  // Edit & Delete Btns
+  document.addEventListener("click", async (e) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest(
+      "button[data-action]",
+    ) as HTMLButtonElement | null;
+    if (!btn) return;
 
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    if (!action || !id) return;
+
+    // Edit
+    if (action === "edit") {
+      const listing = await getListingById(id, true, true);
+
+      const editModal = createListingModal({
+        mode: "edit",
+        listing,
+        onSubmit: async (data) => {
+          try {
+            await updateListing(id, data);
+            showAlert(alertContainer, "success", "Listing updated!");
+            location.reload(); // or re-render instead
+          } catch {
+            showAlert(alertContainer, "error", "Failed to update listing");
+          }
+        },
+      });
+
+      editModal.classList.remove("hidden");
+    }
+
+    // Delete
+    if (action === "delete") {
+      if (!confirm("Are you sure you want to delete this item?")) return;
+
+      try {
+        await deleteListing(id);
+        showAlert(alertContainer, "success", "Listing deleted successfully!");
+        location.reload();
+      } catch {
+        showAlert(alertContainer, "error", "Failed to delete listing.");
+      }
+    }
+  });
+
+  // Tab switching logic stays the same
   const alertContainer =
     element.querySelector<HTMLDivElement>("#alert-container")!;
   const tabButtons = element.querySelectorAll<HTMLButtonElement>(".tab-button");
@@ -256,9 +267,7 @@ export default async function Profile(): Promise<HTMLElement> {
     button.addEventListener("click", () => {
       const tab = button.getAttribute("data-tab");
       if (!tab) return;
-
       activeTab = tab;
-
       tabButtons.forEach((btn) => {
         btn.classList.remove(
           "border-b-2",
@@ -275,10 +284,7 @@ export default async function Profile(): Promise<HTMLElement> {
         "font-semibold",
       );
       button.classList.remove("text-accent");
-
-      if (tabContent) {
-        tabContent.innerHTML = renderTabContent(tab);
-      }
+      if (tabContent) tabContent.innerHTML = renderTabContent(tab);
     });
   });
 

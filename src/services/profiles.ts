@@ -1,6 +1,6 @@
 import { API } from "../api/constants";
 import { authHeaders } from "./apiKey";
-import type { Profile, ProfileUpdate } from "../types";
+import type { Listing, Bid, Profile, ProfileUpdate } from "../types";
 import { getCurrentUser } from "./auth";
 
 export async function getProfile(name: string): Promise<Profile> {
@@ -45,4 +45,36 @@ export async function updateProfile(payload: ProfileUpdate) {
   }
 
   return res.json() as Promise<{ data: Profile }>;
+}
+
+export async function getProfileListings(name: string): Promise<Listing[]> {
+  const headers = await authHeaders();
+  const res = await fetch(
+    `${API}/auction/profiles/${name}/listings?_bids=true`,
+    { headers },
+  );
+  if (!res.ok) throw new Error(`Failed to fetch listings for ${name}`);
+  const data = await res.json();
+  return data.data as Listing[];
+}
+
+export async function getProfileBids(
+  name: string,
+): Promise<(Bid & { listing?: Listing })[]> {
+  const headers = await authHeaders();
+  const res = await fetch(
+    `${API}/auction/profiles/${name}/bids?_listings=true`,
+    { headers },
+  );
+  if (!res.ok) throw new Error(`Failed to fetch bids for ${name}`);
+  const data = await res.json();
+  return data.data as (Bid & { listing?: Listing })[];
+}
+
+export async function getProfileWins(name: string): Promise<Listing[]> {
+  const headers = await authHeaders();
+  const res = await fetch(`${API}/auction/profiles/${name}/wins`, { headers });
+  if (!res.ok) throw new Error(`Failed to fetch wins for ${name}`);
+  const data = await res.json();
+  return data.data as Listing[];
 }
