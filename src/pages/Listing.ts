@@ -121,7 +121,7 @@ export default async function Listing(params?: { id?: string }) {
 
   if (placeBidBtn) {
     placeBidBtn.addEventListener("click", () => {
-      window.location.hash = `#/bid/${listing.id}`;
+      window.location.hash = `#/livebid/${listing.id}`;
     });
   }
 

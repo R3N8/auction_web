@@ -25,10 +25,23 @@ export default function Navbar(): string {
   <nav class="bg-bg w-full z-50 relative">
     <div class="py-4 px-2 sm:px-6 flex flex-wrap items-center justify-between">
 
+      <!-- Links --> 
+      <div class="hidden sm:flex items-center text-text font-body text-xl capitalize"> 
+        <a href="#/" class="mr-6"> 
+          <p class="text-xl hover:underline decoration-primary">Home</p> 
+        </a> 
+        <span class="mr-6 cursor-default">about</span> 
+        <a href="#/profile" class="mr-6"> 
+          <p class="text-xl hover:underline decoration-primary">Profile</p> 
+        </a> 
+        <span class="cursor-default">contact</span> 
+      </div>
+
       <!-- Profile widget -->
-      <div id="profile-widget" class="relative flex items-center gap-2 cursor-pointer select-none min-w-0">
+      <div id="profile-widget" class="relative flex flex-row-reverse md:flex-row items-center gap-2 cursor-pointer select-none min-w-0">
+        <div class="text-text font-body text-2xl truncate"><span class="text-primary">${credits}</span> $</div>
+        <p class="text-2xl font-semibold">|</p>
         <img src="${user.avatar?.url}" alt="${user.avatar?.alt || user.name}" class="w-10 h-10 bg-accent rounded-full object-cover shrink-0">
-        <div class="text-text font-body text-2xl truncate">| <span class="text-primary">${credits}</span> $</div>
 
         <div id="profile-dropdown" class="absolute left-0 top-full mt-1 w-36 bg-surface rounded hidden z-50">
           <div class="flex flex-col">
@@ -42,18 +55,6 @@ export default function Navbar(): string {
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- Links --> 
-      <div class="hidden sm:flex items-center text-text font-body text-xl capitalize"> 
-        <a href="#/" class="mr-6"> 
-          <p class="text-xl hover:underline decoration-primary">Home</p> 
-        </a> 
-        <span class="mr-6 cursor-default">about</span> 
-        <a href="#/profile" class="mr-6"> 
-          <p class="text-xl hover:underline decoration-primary">Profile</p> 
-        </a> 
-        <span class="cursor-default">contact</span> 
       </div>
 
       <!-- Hamburger (mobile only) -->

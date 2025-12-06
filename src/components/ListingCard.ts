@@ -92,5 +92,14 @@ export function createListingCard(item: Listing) {
     });
   }
 
+  // Place Bid Btn
+  const placeBidBtn = card.querySelector<HTMLButtonElement>("#place-bid-btn");
+
+  if (placeBidBtn) {
+    placeBidBtn.addEventListener("click", () => {
+      window.location.hash = `#/livebid/${item.id}`;
+    });
+  }
+
   return card;
 }

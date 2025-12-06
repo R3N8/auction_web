@@ -3,6 +3,7 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Profile from "../pages/Profile";
 import Listing from "../pages/Listing";
+import LiveBid from "../pages/LiveBid";
 
 const routes: Record<
   string,
@@ -15,6 +16,7 @@ const routes: Record<
   "#/register": Register,
   "#/profile": Profile, // always your own profile
   "#/listing/:id": Listing,
+  "#/livebid/:id": LiveBid,
 };
 
 function normalizePath(hash: string): string {

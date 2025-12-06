@@ -3,9 +3,9 @@
 
 @theme {
     /*Colors*/
-    --color-primary: oklch(66.7% 0.295 322.15);
-    --color-secondary: oklch(59.1% 0.293 322.896);
-    --color-tertiary: oklch(74% 0.238 322.16);
+    --color-primary: oklch(58.5% 0.233 277.117);
+    --color-secondary: oklch(45.7% 0.24 277.023);
+    --color-tertiary: oklch(78.5% 0.115 274.713);
     --color-bg: oklch(12.9% 0.042 264.695);
     --color-surface: oklch(27.9% 0.041 260.031);
     --color-accent: oklch(44.6% 0.043 257.281);
