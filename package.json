@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "nodemon server/livebids.ts",
+    "dev:server": "nodemon server/liveBidServer.ts",
     "build:server": "tsc -p tsconfig.server.json",
     "build:client": "vite build",
     "build": "npm run build:server && npm run build:client",
     "preview": "vite preview",
-    "start": "node dist-server/livebids.js",
+    "start": "node dist-server/liveBidServer.js",
     "prepare": "husky install"
   },
   "devDependencies": {
