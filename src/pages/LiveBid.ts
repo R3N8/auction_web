@@ -6,7 +6,7 @@ import { showAlert } from "../utils/alerts";
 import type { Listing, Bid } from "../types";
 import { getHighestBid } from "../utils/getHighestBid";
 
-const socket = io("http://localhost:3000", {
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
   path: "/auction/socket.io",
 });
 

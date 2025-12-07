@@ -1,26 +1,30 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import cors from "cors";
+import crypto from "crypto";
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 const server = http.createServer(app);
 const auctions = new Map();
 
 const io = new Server(server, {
   path: "/auction/socket.io",
   cors: {
-    origin: "http://localhost:5173",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Socket.IO server running on http://localhost:${PORT}`);
+  console.log(`Socket.IO server running on port ${PORT}`);
 });
 
 io.on("connection", (socket) => {
-  console.log("client connected");
+  console.log("client connected: ", socket.id);
   //join specific auction room
   socket.on("join-auction", (listingId) => {
     socket.join(listingId);
