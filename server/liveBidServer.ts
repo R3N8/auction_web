@@ -13,7 +13,7 @@ const auctions = new Map();
 const io = new Server(server, {
   path: "/auction/socket.io",
   cors: {
-    origin: "*",
+    origin: "https://web-auction.netlify.app",
     methods: ["GET", "POST"],
   },
 });
