@@ -17,12 +17,12 @@ Running tests: npm run test
 
 ## Environment Variables
 
-VITE_APP_NAME=""
-VITE_BASE_URL=""
-VITE_API_URL=""
-VITE_SOCKET_URL=""
-TEST_USER_EMAIL=""
-TEST_USER_PASSWORD=""
+VITE_APP_NAME=""  
+VITE_BASE_URL=""  
+VITE_API_URL=""  
+VITE_SOCKET_URL=""  
+TEST_USER_EMAIL=""  
+TEST_USER_PASSWORD=""  
 
 ## Available Scripts  
 
@@ -48,4 +48,5 @@ TEST_USER_PASSWORD=""
 ## Author
 
 RƐN8
+
 
