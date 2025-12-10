@@ -42,11 +42,11 @@ TEST_USER_PASSWORD=""
 - Prettier
 - Husky
 - lint-staged
+- Vitest (units)
+- Playwright (e2e)
 - Netlify (frontend hosting)
 - Render (backend hosting)
 
 ## Author
 
 RƐN8
-
-
