@@ -4,10 +4,10 @@ A dynamic live auction platform that enables real-time bidding and interactive u
 
 ## Project Links
 
-**Figma Design:** [View Design](https://www.figma.com/design/nf1rUp2HbtVDd2WOMuDPWb/auction_website?node-id=10-225&t=4XWcGQsLzory1buD-1)
-**Frontend (Netlify):** [Live Site](https://web-auction.netlify.app)  
-**Backend (Render):** [Socket Server](https://auction-web-3fvm.onrender.com)  
-**Assignment PDF:** [View Report](url)
+- **Figma Design:** [View Design](https://www.figma.com/design/nf1rUp2HbtVDd2WOMuDPWb/auction_website?node-id=10-225&t=4XWcGQsLzory1buD-1)
+- **Frontend (Netlify):** [Live Site](https://web-auction.netlify.app)  
+- **Backend (Render):** [Socket Server](https://auction-web-3fvm.onrender.com)
+- **Assignment PDF:** [View Report](url)
 
 ## Getting Started
 
@@ -17,12 +17,12 @@ Running tests: npm run test
 
 ## Environment Variables
 
-VITE_APP_NAME=""
-VITE_BASE_URL=""
-VITE_API_URL=""
-VITE_SOCKET_URL=""
-TEST_USER_EMAIL=""
-TEST_USER_PASSWORD=""
+VITE_APP_NAME=""  
+VITE_BASE_URL=""  
+VITE_API_URL=""  
+VITE_SOCKET_URL=""  
+TEST_USER_EMAIL=""  
+TEST_USER_PASSWORD=""  
 
 ## Available Scripts  
 
@@ -48,3 +48,5 @@ TEST_USER_PASSWORD=""
 ## Author
 
 RƐN8
+
+
