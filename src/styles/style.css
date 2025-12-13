@@ -97,7 +97,7 @@
     }
 
     .alert-info i{
-        @apply text-4xl text-indigo.600 flex items-center justify-center;
+        @apply text-4xl text-indigo-600 flex items-center justify-center;
     }
 
     .alert-info p{
