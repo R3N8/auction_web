@@ -67,7 +67,7 @@ export default async function Profile(): Promise<HTMLElement> {
     return "Novice Bidder";
   };
 
-  const renderTabContent = (tab: string): string => {
+  const renderTabContent = async (tab: string): Promise<string> => {
     switch (tab) {
       case "Listings":
         if (userListings.length === 0)
@@ -112,48 +112,65 @@ export default async function Profile(): Promise<HTMLElement> {
         if (userBids.length === 0)
           return "<p class='text-text/70 text-center py-8'>No active bids yet.</p>";
 
+        // Group user bids by listing ID
         const listingsMap = new Map<string, Listing>();
         userBids.forEach((bid) => {
           if (bid.listing) listingsMap.set(bid.listing.id, bid.listing);
         });
         const uniqueListings = Array.from(listingsMap.values());
 
+        // Fetch full listings including all bids
+        const listingsWithBids = await Promise.all(
+          uniqueListings.map(async (listing) => {
+            return await getListingById(listing.id, true, true);
+          }),
+        );
+
         return `
           <div class="grid gap-4">
-            ${uniqueListings
+            ${listingsWithBids
               .map((listing) => {
                 if (!listing) return "";
 
-                // All bids user made on this listing
-                const bidsOnListing = userBids.filter(
-                  (b) => b.listing?.id === listing.id,
+                const allBids = listing.bids || [];
+
+                // User's highest bid on this listing
+                const userBid = Math.max(
+                  0,
+                  ...allBids
+                    .filter((b: Bid) => b.bidder.name === user.name)
+                    .map((b: Bid) => b.amount),
                 );
 
-                // User's highest bid
-                const userBidObj = bidsOnListing.sort(
-                  (a, b) => Number(b.amount) - Number(a.amount),
-                )[0];
-                const userBid = userBidObj ? Number(userBidObj.amount) : 0;
-
-                // Highest bid among all bids (use your getHighestBid util if you have it)
-                const highestBid = bidsOnListing.length
-                  ? Math.max(...bidsOnListing.map((b) => Number(b.amount)))
+                // Highest bid overall
+                const highestBid = allBids.length
+                  ? Math.max(...allBids.map((b: Bid) => b.amount))
                   : 0;
 
                 const auctionEnded = new Date(listing.endsAt) <= new Date();
 
-                let borderClass = "border-bg";
-                let statusTag = "Ended";
+                // Determine status
+                const status = auctionEnded
+                  ? "Ended"
+                  : userBid === 0
+                    ? "No bid"
+                    : userBid === highestBid
+                      ? "Winning"
+                      : "Losing";
 
-                if (!auctionEnded) {
-                  if (userBid === highestBid && userBid > 0) {
-                    borderClass = "border-green-500";
-                    statusTag = "Winning";
-                  } else {
-                    borderClass = "border-orange-500";
-                    statusTag = "Losing";
-                  }
-                }
+                const borderClass =
+                  status === "Winning"
+                    ? "border-green-500"
+                    : status === "Losing"
+                      ? "border-orange-500"
+                      : "border-bg";
+
+                const statusTagClass =
+                  status === "Winning"
+                    ? "bg-green-500 text-text"
+                    : status === "Losing"
+                      ? "bg-orange-500 text-text"
+                      : "bg-bg text-text";
 
                 return `
                   <div class="border-2 ${borderClass} rounded-lg p-4 bg-accent">
@@ -168,13 +185,7 @@ export default async function Profile(): Promise<HTMLElement> {
                       <div class="flex-1">
                         <div class="flex justify-between items-start">
                           <h3>${listing.title}</h3>
-                          <span class="text-xs px-2 py-1 rounded ${
-                            auctionEnded
-                              ? "bg-bg text-text"
-                              : userBid === highestBid
-                                ? "bg-green-500 text-text"
-                                : "bg-orange-500 text-text"
-                          }">${statusTag}</span>
+                          <span class="text-xs px-2 py-1 rounded ${statusTagClass}">${status}</span>
                         </div>
                         <p>Your bid: ${userBid} $</p>
                         <p>Highest bid: ${highestBid} $</p>
@@ -212,9 +223,10 @@ export default async function Profile(): Promise<HTMLElement> {
                             ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />`
                             : ""
                         }
-                        <p class="text-xl font-semibold mt-2">
-                          Won for: ${winningBid} $
-                        </p>
+                        <div class="flex-1">
+                          <p class="text-xl font-semibold capitalize">${listing.title}</p>
+                          <p class="text-text/70 mt-2">Won for: ${winningBid} $</p>
+                        </div>
                       </div>
                     </a>
                   </div>
@@ -272,7 +284,7 @@ export default async function Profile(): Promise<HTMLElement> {
                 )
                 .join("")}
             </div>
-            <div id="tab-content">${renderTabContent(activeTab)}</div>
+            <div id="tab-content">${await renderTabContent(activeTab)}</div>
           </div>
         </div>
     </div>
@@ -331,7 +343,7 @@ export default async function Profile(): Promise<HTMLElement> {
   const tabContent = element.querySelector<HTMLDivElement>("#tab-content");
 
   tabButtons.forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const tab = button.getAttribute("data-tab");
       if (!tab) return;
       activeTab = tab;
@@ -351,7 +363,7 @@ export default async function Profile(): Promise<HTMLElement> {
         "font-semibold",
       );
       button.classList.remove("text-accent");
-      if (tabContent) tabContent.innerHTML = renderTabContent(tab);
+      if (tabContent) tabContent.innerHTML = await renderTabContent(tab);
     });
   });
 

@@ -23,7 +23,7 @@ export default async function Listing(params?: { id?: string }) {
       <!-- Details -->
       <div class="flex flex-col md:flex-row gap-10">
         <!-- Listing Image -->
-        <div class="w-full md:w-1/2 h-120 object-cover rounded">
+        <div class="w-auto md:w-1/2 h-autp object-cover rounded">
           <img 
             src="${listing.media?.[0]?.url || "/placeholder.png"}" 
             alt="${listing.title}" 
