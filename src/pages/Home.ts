@@ -4,16 +4,9 @@ import { createListingCard } from "../components/ListingCard";
 import { createPagination } from "../components/Pagination";
 import { getHighestBid } from "../utils/getHighestBid";
 import { showAlert } from "../utils/alerts";
-import type { Listing } from "../types/index";
+import type { Listing, FetchListingsParams } from "../types/index";
 import { API } from "../api/constants";
 import { authHeaders } from "../services/apiKey";
-
-interface FetchListingsParams {
-  _seller?: boolean;
-  _bids?: boolean;
-  q?: string;
-  page?: number;
-}
 
 export default function Home(): HTMLDivElement {
   const element = document.createElement("div");
@@ -33,11 +26,11 @@ export default function Home(): HTMLDivElement {
                 class="flex-1 min-w-0 px-4 py-3 rounded-md border border-accent text-text/80 transition"
               />
               <div class="flex flex-row justify-between gap-3 items-center">
-                <button id="create-listing" class="flex items-center gap-2 rounded bg-primary px-4 py-2 text-text capitalize hover:bg-secondary transition">
+                <button id="create-listing" class="flex items-center gap-2 rounded cursor-pointer bg-primary px-4 py-2 text-text capitalize hover:bg-secondary transition">
                   <i class="fa-solid fa-circle-plus"></i>
                   <p>create</p>
                 </button>
-                <button id="sort-by-bids" class="flex items-center gap-2 rounded bg-accent px-4 py-2 text-text capitalize hover:bg-surface transition">
+                <button id="sort-by-bids" class="flex items-center gap-2 rounded cursor-pointer bg-accent px-4 py-2 text-text capitalize hover:bg-surface transition">
                   <i class="fa-solid fa-up-down"></i>
                   <p>sort</p>
                 </button>
@@ -107,19 +100,44 @@ export default function Home(): HTMLDivElement {
     }
 
     try {
-      const params: FetchListingsParams = query
-        ? { q: query, _seller: true, _bids: true }
-        : { page: 1, _seller: true, _bids: true };
-      const fetched = await fetchListings(params);
+      let all: Listing[] = [];
 
-      // Always include seller and bids
-      allListings = Array.isArray(fetched) ? fetched : [];
+      if (query) {
+        // Search: fetch page 1 only
+        const params: FetchListingsParams = {
+          q: query,
+          _seller: true,
+          _bids: true,
+          page: 1,
+        };
+        const fetched = await fetchListings(params);
+        all = Array.isArray(fetched) ? fetched : [];
+      } else {
+        // Normal load: fetch all pages
+        let page = 1;
+        let fetched: Listing[];
+        do {
+          const params: FetchListingsParams = {
+            _seller: true,
+            _bids: true,
+            page,
+          };
+          fetched = await fetchListings(params);
+          all = all.concat(fetched);
+          page++;
+        } while (fetched.length > 0);
+      }
+
+      allListings = all;
+
+      // Ensure seller and bids exist
       allListings.forEach((listing) => {
         if (!listing.bids) listing.bids = [];
         if (!listing.seller)
           listing.seller = { name: "Unknown", email: "", wins: [] };
       });
 
+      // SORT logic
       if (priceSort === "asc") {
         allListings.sort((a, b) => getHighestBid(a) - getHighestBid(b));
       } else if (priceSort === "desc") {
@@ -171,6 +189,7 @@ export default function Home(): HTMLDivElement {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
+      // --- MOBILE INFINITE SCROLL ---
       if (isMobile) {
         pagination.style.display = "none";
         let currentMobilePage = 1;
@@ -198,7 +217,20 @@ export default function Home(): HTMLDivElement {
           if (scrollPosition >= documentHeight - 300) loadMore();
         };
         window.addEventListener("scroll", scrollHandler);
-      } else {
+      }
+
+      // --- SEARCH RESULTS (no pagination) ---
+      if (query) {
+        pagination.style.display = "none";
+        listingsContainer.innerHTML = "";
+        allListings.forEach((item) =>
+          listingsContainer.appendChild(createListingCard(item)),
+        );
+        return; // stop here so normal pagination never runs
+      }
+
+      // --- NORMAL DESKTOP PAGINATION ---
+      if (!isMobile) {
         pagination.style.display = "flex";
         renderPage(1);
       }
@@ -230,7 +262,7 @@ export default function Home(): HTMLDivElement {
   });
 
   // Create Listing Modal
-  const createModal = document.createElement("div");
+  const createModal: HTMLDivElement = document.createElement("div");
   createModal.id = "create-listing-modal";
   createModal.className =
     "fixed inset-0 bg-bg flex justify-center items-center hidden z-50 p-4";
@@ -243,8 +275,8 @@ export default function Home(): HTMLDivElement {
         <label><p>image URL:</p><input name="image" class="block w-full rounded-md bg-surface text-text px-3 py-1.5"/></label>
         <label><p>ends at:</p><input type="datetime-local" name="endsAt" required class="block w-full rounded-md bg-surface text-text px-3 py-1.5"/></label>
         <div class="flex gap-4 mt-4">
-          <button type="button" class="cancel-create-btn w-full rounded bg-accent text-text px-3 py-1.5 capitalize hover:bg-surface">cancel</button>
-          <button type="submit" class="w-full rounded bg-primary text-bg px-3 py-1.5 capitalize">create</button>
+          <button type="button" class="cancel-create-btn w-full rounded cursor-pointer bg-accent text-text px-3 py-1.5 capitalize hover:bg-surface">cancel</button>
+          <button type="submit" class="w-full rounded cursor-pointer bg-primary text-bg px-3 py-1.5 capitalize hover:bg-secondary">create</button>
         </div>
       </form>
       <button class="close-create-btn absolute top-2 right-2 text-xl">
@@ -253,6 +285,8 @@ export default function Home(): HTMLDivElement {
     </div>
   `;
   document.body.appendChild(createModal);
+  const createForm: HTMLFormElement =
+    createModal.querySelector<HTMLFormElement>(".create-listing-form")!;
 
   createBtn.addEventListener("click", () => {
     if (!user) {
@@ -263,11 +297,20 @@ export default function Home(): HTMLDivElement {
       );
       return;
     }
+
     createForm.reset();
     createModal.classList.remove("hidden");
+
+    // Disable main create button while modal is open (optional)
+    createBtn.disabled = true;
   });
 
-  const closeCreateModal = () => createModal.classList.add("hidden");
+  // 3️⃣ Close modal → re-enable main button
+  const closeCreateModal = () => {
+    createModal.classList.add("hidden");
+    createBtn.disabled = false;
+  };
+
   createModal
     .querySelector(".cancel-create-btn")
     ?.addEventListener("click", closeCreateModal);
@@ -275,26 +318,26 @@ export default function Home(): HTMLDivElement {
     .querySelector(".close-create-btn")
     ?.addEventListener("click", closeCreateModal);
 
-  const createForm = createModal.querySelector<HTMLFormElement>(
-    ".create-listing-form",
-  )!;
+  // 4️⃣ Form submission → show loading state, submit, handle response
   createForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    if (!user) {
-      showAlert(
-        alertContainer,
-        "warning",
-        "You must be logged in to create a listing.",
-      );
-      return;
-    }
+    const submitBtn = createForm.querySelector<HTMLButtonElement>(
+      "button[type='submit']",
+    )!;
+    const originalText = submitBtn.textContent;
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `
+      <span class="mr-2 inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
+      Creating...
+    `;
 
     const formData = new FormData(createForm);
     const payload = {
       title: formData.get("title") as string,
-      endsAt: new Date(formData.get("endsAt") as string).toISOString(),
       description: (formData.get("description") as string) || undefined,
+      endsAt: new Date(formData.get("endsAt") as string).toISOString(),
       tags: [],
       media: formData.get("image")
         ? [{ url: formData.get("image") as string, alt: "listing image" }]
@@ -311,21 +354,21 @@ export default function Home(): HTMLDivElement {
 
       if (!response.ok)
         throw new Error(`Failed to create listing: ${response.status}`);
-
       const result = await response.json();
       const listingId = result.data.id;
 
-      // Fetch full listing with seller and bids
       const fullListing = await getListingById(listingId, true, true);
-
       allListings.unshift(fullListing);
-      createForm.reset();
-      createModal.classList.add("hidden");
+
       renderLocalOnly();
       showAlert(alertContainer, "success", "Listing created successfully!");
+      createModal.classList.add("hidden");
+      createBtn.disabled = false;
     } catch (err) {
       console.error(err);
       showAlert(alertContainer, "error", "Failed to create listing.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
     }
   });
 

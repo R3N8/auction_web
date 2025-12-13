@@ -1,20 +1,38 @@
 import { API } from "../api/constants";
 import { authHeaders } from "../services/apiKey";
 import { load } from "../utils/storage";
+import { getHighestBid } from "../utils/getHighestBid";
 import type { Listing, FetchListingsParams } from "../types";
 
-// Fetch listings with optional filters: page, tag, active status, and search query
+// Fetch listings with optional search + pagination
 export async function fetchListings(
   params?: FetchListingsParams,
 ): Promise<Listing[]> {
-  const queryParams = new URLSearchParams();
-  if (params?._seller) queryParams.append("_seller", "true");
-  if (params?._bids) queryParams.append("_bids", "true");
-  if (params?.q) queryParams.append("q", params.q);
-  if (params?.page) queryParams.append("page", params.page.toString());
+  const hasQuery = params?.q?.trim().length;
 
-  const res = await fetch(`${API}/auction/listings?${queryParams.toString()}`);
+  const baseParams = new URLSearchParams();
+  if (params?._seller) baseParams.append("_seller", "true");
+  if (params?._bids) baseParams.append("_bids", "true");
+  if (params?.page) baseParams.append("page", params.page.toString());
+
+  // --- SEARCH MODE ---
+  if (hasQuery) {
+    const searchParams = new URLSearchParams(baseParams.toString());
+    searchParams.set("q", params!.q!);
+
+    const res = await fetch(
+      `${API}/auction/listings/search?${searchParams.toString()}`,
+    );
+    if (!res.ok) throw new Error(`Failed to search listings: ${res.status}`);
+
+    const data = await res.json();
+    return data.data;
+  }
+
+  // --- NORMAL LISTINGS MODE ---
+  const res = await fetch(`${API}/auction/listings?${baseParams.toString()}`);
   if (!res.ok) throw new Error(`Failed to fetch listings: ${res.status}`);
+
   const data = await res.json();
   return data.data;
 }
@@ -122,4 +140,23 @@ export async function placeBid(listingId: string, amount: number) {
     throw new Error(data.message || "Failed to place bid");
   }
   return data.data;
+}
+
+// refresh a listing after updating
+export async function refreshListing(listingId: string) {
+  try {
+    const updatedListing = await getListingById(listingId, true, true);
+    const listingEl = document.querySelector(
+      `[data-listing-id="${listingId}"]`,
+    );
+    if (!listingEl) return;
+
+    listingEl.querySelector(".endsAt")!.textContent = new Date(
+      updatedListing.endsAt,
+    ).toLocaleString();
+    listingEl.querySelector(".highestBid")!.textContent =
+      `Highest bid: ${getHighestBid(updatedListing)}$`;
+  } catch (err) {
+    console.error("Failed to refresh listing", err);
+  }
 }

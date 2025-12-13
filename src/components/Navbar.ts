@@ -9,13 +9,28 @@ export default function Navbar(): string {
   if (!user) {
     return `
       <nav>
-        <div class="bg-bg px-6 py-4 flex justify-end gap-4">
-          <a href="#/register" class="px-4 py-2 rounded-md border border-accent text-muted capitalize cursor-pointer hover:text-text hover:bg-accent transition-all">
-            Register
-          </a>
-          <a href="#/login" class="px-4 py-2 rounded-md bg-tertiary capitalize cursor-pointer hover:bg-primary transition-all">
-            Login
-          </a>
+        <div class="bg-bg px-6 py-4 flex justify-between gap-4">
+          <!-- Links --> 
+          <div class="hidden sm:flex items-center text-text font-body text-xl capitalize"> 
+            <a href="#/" class="mr-6"> 
+              <p class="text-xl hover:underline decoration-primary">Home</p> 
+            </a> 
+            <span class="mr-6 cursor-default">about</span> 
+            <a href="#/profile" class="mr-6"> 
+              <p class="text-xl hover:underline decoration-primary">Profile</p> 
+            </a> 
+            <span class="cursor-default">contact</span> 
+          </div>
+
+          <!-- Auth buttons -->
+          <div class="flex items-center gap-4">
+            <a href="#/register" class="px-4 py-2 rounded-md border border-accent text-muted capitalize cursor-pointer hover:text-text hover:bg-accent transition-all">
+              Register
+            </a>
+            <a href="#/login" class="px-4 py-2 rounded-md bg-tertiary capitalize cursor-pointer hover:bg-primary transition-all">
+              Login
+            </a>
+          </div>
         </div>
       </nav>
     `;

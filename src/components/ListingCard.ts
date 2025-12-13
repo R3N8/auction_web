@@ -15,13 +15,15 @@ export function createListingCard(item: Listing) {
 
   card.innerHTML = `
         <!-- Image -->
-        <div class="w-full h-55 mb-3 rounded-md overflow-hidden cursor-pointer">
-            ${
-              item.media && item.media.length > 0
-                ? `<img src="${item.media[0].url}" alt="${item.media[0].alt || item.title}" class="w-full h-full object-cover">`
-                : `<div class="w-full h-full flex items-center justify-center text-text/40 font-body">No image</div>`
-            }
-        </div>
+        <a href="#/listing/${item.id}"
+          <div class="w-full h-55 mb-3 rounded-md overflow-hidden cursor-pointer">
+              ${
+                item.media && item.media.length > 0
+                  ? `<img src="${item.media[0].url}" alt="${item.media[0].alt || item.title}" class="w-full h-full object-cover">`
+                  : `<div class="w-full h-full flex items-center justify-center text-text/40 font-body">No image</div>`
+              }
+          </div>
+        </a>
 
         <!-- Countdown -->
         <div id="countdown-${item.id}" class="text-end mb-3 cursor-default"></div>
@@ -29,7 +31,7 @@ export function createListingCard(item: Listing) {
         <!-- Title -->
         <div>
             <a href="#/listing/${item.id}">
-                <p class="font-display text-2xl/8 font-semibold tracking-normal text-text capitalize">${item.title}<p/>
+                <p class="font-display text-2xl/8 font-semibold tracking-normal text-text line-clamp-2 capitalize">${item.title}<p/>
             </a>
         </div>
         
@@ -58,10 +60,17 @@ export function createListingCard(item: Listing) {
             <a href="#/listing/${item.id}" class="btn-detail rounded-md bg-accent py-2 px-4 hover:bg-accent/50">
                 <p class="capitalize">view item</p>
             </a>
-            <button id="place-bid-btn" type="button" class="flex items-center gap-2 btn-bid rounded-md bg-primary py-2 px-4 cursor-pointer hover:bg-secondary ${!user ? "opacity-50 cursor-not-allowed" : ""}" data-id="${item.id}" ${!user ? "disabled" : ""}>
+
+            ${
+              user
+                ? `
+              <button id="place-bid-btn" type="button" class="flex items-center gap-2 btn-bid rounded-md bg-primary py-2 px-4 cursor-pointer hover:bg-secondary ${!user ? "opacity-50 cursor-not-allowed" : ""}" data-id="${item.id}" ${!user ? "disabled" : ""}>
                 <i class="fa-solid fa-gavel text-small text-text"></i>
                 <p class="capitalize">place bid</p>
-            </button>
+              </button>
+              `
+                : ""
+            }
         </div>
     `;
 

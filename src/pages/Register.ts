@@ -54,13 +54,18 @@ export default async function Register() {
       return;
     }
 
-    const noroffEmailPattern = /^[a-zA-Z]+\.[a-zA-Z]+@stud\.noroff\.no$/;
-    if (!noroffEmailPattern.test(email)) {
+    const namePattern = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!namePattern.test(name)) {
       showAlert(
         alertContainer,
         "error",
-        "Email must be in the format firstname.lastname@stud.noroff.no",
+        "Username must be 3-20 characters and can only contain letters, numbers, and underscores",
       );
+      return;
+    }
+
+    if (!email.endsWith("@stud.noroff.no")) {
+      showAlert(alertContainer, "error", "Email must end with @stud.noroff.no");
       return;
     }
 

@@ -49,6 +49,9 @@ export function createListingModal(options: {
 
   document.body.appendChild(modal);
 
+  const submitBtn = modal.querySelector<HTMLButtonElement>(
+    "button[type='submit']",
+  )!;
   const form = modal.querySelector<HTMLFormElement>(".listing-form")!;
   const closeModal = () => modal.classList.add("hidden");
 
@@ -57,6 +60,14 @@ export function createListingModal(options: {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent;
+    submitBtn.innerHTML = `
+      <span class="mr-2 inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
+      ${mode === "create" ? "Creating..." : "Saving..."}
+    `;
+
     const formData = new FormData(form);
 
     const data = {
@@ -68,8 +79,13 @@ export function createListingModal(options: {
         : [],
     };
 
-    await onSubmit(data);
-    closeModal();
+    try {
+      await onSubmit(data);
+      closeModal();
+    } catch {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
   });
 
   return modal;

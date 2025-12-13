@@ -73,8 +73,13 @@ export async function getProfileBids(
 
 export async function getProfileWins(name: string): Promise<Listing[]> {
   const headers = await authHeaders();
-  const res = await fetch(`${API}/auction/profiles/${name}/wins`, { headers });
+
+  const res = await fetch(`${API}/auction/profiles/${name}/wins?_bids=true`, {
+    headers,
+  });
+
   if (!res.ok) throw new Error(`Failed to fetch wins for ${name}`);
+
   const data = await res.json();
   return data.data as Listing[];
 }

@@ -56,13 +56,8 @@ export default async function Login() {
       return;
     }
 
-    const noroffEmailPattern = /^[a-zA-Z]+\.[a-zA-Z]+@stud\.noroff\.no$/;
-    if (!noroffEmailPattern.test(email)) {
-      showAlert(
-        alertContainer,
-        "error",
-        "Email must be in the format firstname.lastname@stud.noroff.no",
-      );
+    if (!email.endsWith("@stud.noroff.no")) {
+      showAlert(alertContainer, "error", "Email must end with @stud.noroff.no");
       return;
     }
 

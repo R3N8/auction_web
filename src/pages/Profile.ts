@@ -13,7 +13,7 @@ import {
 import { createListingModal } from "../components/ListingModal";
 import { getCredits } from "../utils/credits";
 import { showAlert } from "../utils/alerts";
-import type { Listing, Profile } from "../types";
+import type { Listing, Profile, Bid } from "../types";
 import { renderNavbar } from "../main";
 import { getHighestBid } from "../utils/getHighestBid";
 
@@ -31,16 +31,14 @@ export default async function Profile(): Promise<HTMLElement> {
 
   let userProfile: Profile;
   let userListings: Listing[] = [];
-  let userBids: Listing[] = [];
+  let userBids: (Bid & { listing?: Listing })[] = [];
   let userWins: Listing[] = [];
 
   try {
     userProfile = await getProfile(user.name);
 
     userListings = await getProfileListings(user.name);
-    userBids = (await getProfileBids(user.name))
-      .map((bid) => bid.listing)
-      .filter(Boolean) as Listing[];
+    userBids = await getProfileBids(user.name);
     userWins = await getProfileWins(user.name);
   } catch (err) {
     console.error(err);
@@ -87,8 +85,10 @@ export default async function Profile(): Promise<HTMLElement> {
                 </div>
 
                 <div class="flex items-end justify-baseline gap-4">
-                  ${listing.media?.[0] ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />` : ""}
-                  <div class="flex-1">
+                  <a href="#/listing/${listing.id}">
+                    ${listing.media?.[0] ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />` : ""}
+                  </a>
+                    <div class="flex-1">
                     <p class="text-xl font-semibold capitalize">${listing.title}</p>
                     <div class="flex justify-between items-center mt-2">
                       <span class="text-text">${highestBid !== null ? `${highestBid} $` : "No bids"}</span>
@@ -102,57 +102,118 @@ export default async function Profile(): Promise<HTMLElement> {
               .join("")}
           </div>
         `;
-      case "Bids":
+      case "Bids": {
         if (userBids.length === 0)
           return "<p class='text-text/70 text-center py-8'>No active bids yet.</p>";
+
+        const listingsMap = new Map<string, Listing>();
+        userBids.forEach((bid) => {
+          if (bid.listing) listingsMap.set(bid.listing.id, bid.listing);
+        });
+        const uniqueListings = Array.from(listingsMap.values());
+
         return `
           <div class="grid gap-4">
-            ${userBids
+            ${uniqueListings
               .map((listing) => {
-                const userBid = listing.bids
-                  ?.filter((b) => b.bidder?.name === user.name)
-                  .sort((a, b) => b.amount - a.amount)[0];
-                const highestBid = listing.bids?.sort(
-                  (a, b) => b.amount - a.amount,
+                if (!listing) return "";
+
+                // All bids user made on this listing
+                const bidsOnListing = userBids.filter(
+                  (b) => b.listing?.id === listing.id,
+                );
+
+                // User's highest bid
+                const userBidObj = bidsOnListing.sort(
+                  (a, b) => Number(b.amount) - Number(a.amount),
                 )[0];
-                const isWinning = userBid?.amount === highestBid?.amount;
+                const userBid = userBidObj ? Number(userBidObj.amount) : 0;
+
+                // Highest bid among all bids (use your getHighestBid util if you have it)
+                const highestBid = bidsOnListing.length
+                  ? Math.max(...bidsOnListing.map((b) => Number(b.amount)))
+                  : 0;
+
+                const auctionEnded = new Date(listing.endsAt) <= new Date();
+
+                let borderClass = "border-bg";
+                let statusTag = "Ended";
+
+                if (!auctionEnded) {
+                  if (userBid === highestBid && userBid > 0) {
+                    borderClass = "border-green-500";
+                    statusTag = "Winning";
+                  } else {
+                    borderClass = "border-orange-500";
+                    statusTag = "Losing";
+                  }
+                }
+
                 return `
-                <div class="border rounded-lg p-4 ${isWinning ? "border-green-500" : ""}">
-                  <div class="flex gap-4">
-                    ${listing.media?.[0] ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />` : ""}
-                    <div class="flex-1">
-                      <div class="flex justify-between items-start">
-                        <h3>${listing.title}</h3>
-                        ${isWinning ? '<span class="bg-green-500 text-text text-xs px-2 py-1 rounded">Winning</span>' : ""}
+                  <div class="border-2 ${borderClass} rounded-lg p-4 bg-accent">
+                    <div class="flex gap-4">
+                      <a href="#/listing/${listing.id}">
+                        ${
+                          listing.media?.[0]
+                            ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />`
+                            : ""
+                        }
+                      </a>
+                      <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                          <h3>${listing.title}</h3>
+                          <span class="text-xs px-2 py-1 rounded ${
+                            auctionEnded
+                              ? "bg-bg text-text"
+                              : userBid === highestBid
+                                ? "bg-green-500 text-text"
+                                : "bg-orange-500 text-text"
+                          }">${statusTag}</span>
+                        </div>
+                        <p>Your bid: ${userBid} $</p>
+                        <p>Highest bid: ${highestBid} $</p>
+                        <p class="text-end text-sm text-text/70 block mt-1">Ends: ${new Date(
+                          listing.endsAt,
+                        ).toLocaleDateString()}</p>
                       </div>
-                      <p class="text-text/70 text-sm mt-1">Your bid: <strong>${userBid?.amount || 0} credits</strong></p>
-                      <p class="text-text/70 text-sm">Highest bid: <strong>${highestBid?.amount || 0} credits</strong></p>
-                      <span class="text-sm text-text/70 block mt-2">Ends: ${new Date(listing.endsAt).toLocaleDateString()}</span>
                     </div>
                   </div>
-                </div>
-              `;
+                `;
               })
               .join("")}
           </div>
         `;
+      }
       case "Wins":
         if (userWins.length === 0)
           return "<p class='text-text/70 text-center py-8'>No wins yet. Keep bidding!</p>";
+
         return `
           <div class="grid gap-4">
             ${userWins
-              .map(
-                (listing) => `
-              <div class="bg-accent rounded-lg p-4">
-                <div class="flex gap-4">
-                  ${listing.media?.[0] ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />` : ""}
-                  <p class="text-xl font-semibold mt-2">
-                    Won for: ${listing.bids?.sort((a, b) => b.amount - a.amount)[0]?.amount || 0} $
-                  </p>
-              </div>
-            `,
-              )
+              .map((listing) => {
+                const winningBid =
+                  listing.bids && listing.bids.length
+                    ? Math.max(...listing.bids.map((b) => Number(b.amount)))
+                    : 0;
+
+                return `
+                  <div class="bg-accent rounded-lg p-4">
+                    <a href="#/listing/${listing.id}">
+                      <div class="flex gap-4">
+                        ${
+                          listing.media?.[0]
+                            ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-24 h-24 object-cover rounded" />`
+                            : ""
+                        }
+                        <p class="text-xl font-semibold mt-2">
+                          Won for: ${winningBid} $
+                        </p>
+                      </div>
+                    </a>
+                  </div>
+                `;
+              })
               .join("")}
           </div>
         `;
@@ -310,13 +371,10 @@ export default async function Profile(): Promise<HTMLElement> {
                 <input type="text" name="banner" value="${userProfile.banner?.url || ""}" class="block w-full rounded-md bg-surface px-3 py-1.5 text-base text-text font-body outline-1 -outline-offset-1 outline-accent placeholder:text-text/50 focus:outline-2 focus:-outline-offset-2 focus:outline-primary sm:text-sm/6"/>
             </label>
             <div class="flex gap-4 mt-4">
-                <button type="button" class="cancel-edit-btn w-full rounded-md bg-accent px-3 py-1.5 font-display text-text capitalize hover:bg-surface hover:cursor-pointer">cancel</button>
-                <button type="submit" class="w-full rounded-md bg-primary px-3 py-1.5 font-display font-semibold text-bg capitalize hover:bg-secondary hover:cursor-pointer">save</button>
+                <button type="button" class="cancel-edit-btn w-full rounded-md bg-accent px-3 py-1.5 font-display text-text capitalize cursor-pointer hover:bg-surface">cancel</button>
+                <button type="submit" class="w-full rounded-md bg-primary px-3 py-1.5 font-display font-semibold text-bg capitalize cursor-pointer hover:bg-secondary">save</button>
             </div>
         </form>
-        <button class="close-modal-btn absolute top-2 right-2 text-text text-xl hover:cursor-pointer">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -331,9 +389,6 @@ export default async function Profile(): Promise<HTMLElement> {
   const closeModal = () => modal.classList.add("hidden");
   modal
     .querySelector(".cancel-edit-btn")
-    ?.addEventListener("click", closeModal);
-  modal
-    .querySelector(".close-modal-btn")
     ?.addEventListener("click", closeModal);
 
   // Form Submission

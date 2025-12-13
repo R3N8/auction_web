@@ -98,6 +98,7 @@ export interface Bid {
   amount: number;
   created: string;
   bidder: Bidder;
+  listing: Listing;
 }
 
 export interface Bidder {
