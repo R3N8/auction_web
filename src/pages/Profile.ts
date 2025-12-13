@@ -24,8 +24,14 @@ export default async function Profile(): Promise<HTMLElement> {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   if (!user?.name) {
-    element.innerHTML =
-      "<p class='text-center mt-8'>Please log in to view your profile.</p>";
+    element.innerHTML = `
+      <div class="min-h-screen flex flex-col items-center justify-center">
+        <div class="alert-info w-full max-w-3xl mx-auto mt-8">
+          <i class="fa-solid fa-circle-info"></i>
+          <p>Please log in to view your profile and manage your listings and bids.</p>
+        </div>
+      </div>
+    `;
     return element;
   }
 

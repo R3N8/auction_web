@@ -4,10 +4,14 @@ A dynamic live auction platform that enables real-time bidding and interactive u
 
 ## Project Links
 
+- **Planning Board:** [Vew Plan](https://github.com/users/R3N8/projects/12)
 - **Figma Design:** [View Design](https://www.figma.com/design/nf1rUp2HbtVDd2WOMuDPWb/auction_website?node-id=10-225&t=4XWcGQsLzory1buD-1)
 - **Frontend (Netlify):** [Live Site](https://web-auction.netlify.app)  
 - **Backend (Render):** [Socket Server](https://auction-web-3fvm.onrender.com)
-- **Assignment PDF:** [View Report](url)
+
+## API Link
+
+- **Noroff API:** [View API docs](https://docs.noroff.dev/docs/v2)
 
 ## Getting Started
 

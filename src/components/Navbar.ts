@@ -15,11 +15,15 @@ export default function Navbar(): string {
             <a href="#/" class="mr-6"> 
               <p class="text-xl hover:underline decoration-primary">Home</p> 
             </a> 
-            <span class="mr-6 cursor-default">about</span> 
+            <a href="#/about" class="mr-6"> 
+              <p class="text-xl hover:underline decoration-primary">About</p> 
+            </a> 
             <a href="#/profile" class="mr-6"> 
               <p class="text-xl hover:underline decoration-primary">Profile</p> 
             </a> 
-            <span class="cursor-default">contact</span> 
+            <a href="#/contact" class="mr-6"> 
+              <p class="text-xl hover:underline decoration-primary">Contact</p> 
+            </a> 
           </div>
 
           <!-- Auth buttons -->
@@ -40,16 +44,19 @@ export default function Navbar(): string {
   <nav class="bg-bg w-full z-50 relative">
     <div class="py-4 px-2 sm:px-6 flex flex-wrap items-center justify-between">
 
-      <!-- Links --> 
       <div class="hidden sm:flex items-center text-text font-body text-xl capitalize"> 
         <a href="#/" class="mr-6"> 
           <p class="text-xl hover:underline decoration-primary">Home</p> 
         </a> 
-        <span class="mr-6 cursor-default">about</span> 
+        <a href="#/about" class="mr-6"> 
+          <p class="text-xl hover:underline decoration-primary">About</p> 
+        </a> 
         <a href="#/profile" class="mr-6"> 
           <p class="text-xl hover:underline decoration-primary">Profile</p> 
         </a> 
-        <span class="cursor-default">contact</span> 
+        <a href="#/contact" class="mr-6"> 
+          <p class="text-xl hover:underline decoration-primary">Contact</p> 
+        </a> 
       </div>
 
       <!-- Profile widget -->
@@ -90,9 +97,9 @@ export default function Navbar(): string {
         <!-- Menu links -->
         <div class="flex flex-col items-start justify-start gap-3 px-4 text-xl text-text font-body">
           <a href="#/">Home</a>
-          <span>About</span>
+          <a href="#/about">About</a>
           <a href="#/profile">Profile</a>
-          <span>Contact</span>
+          <a href="#/contact">Contact</a>
         </div>
 
         <!-- Logout button at bottom -->
